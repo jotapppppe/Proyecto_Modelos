@@ -1,0 +1,26 @@
+---
+title: "Análisis de la supervivencia en pacientes jóvenes con cáncer de mama"
+author: 
+- José Eduardo López Corella | C24343
+- Henri Gerard Gabert Hidalgo | B93096
+- Cristopher Gómez Valverde | B32927
+- Juan Pablo Morgan Sandí | C15319
+
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: true
+  extra_dependencies: ['amsmath', 'someotherpackage']
+---
+
+```{r include=FALSE}
+source("cod/setup.R")
+```
+
+```{r}
+summary(data)
+```
+
