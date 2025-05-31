@@ -15,12 +15,62 @@ output:
       collapsed: true
   extra_dependencies: ['amsmath', 'someotherpackage']
 ---
-
+# Setup
 ```{r include=FALSE}
 source("cod/setup.R")
 ```
+# EDA
+Observamos el summary de la base de datos.
 
 ```{r}
 summary(data)
+```
+
+
+## Curvas de Keplen-Meier
+
+Primero, se observa el análisis en caso de toda la muestra.
+
+```{r}
+km_total <- survfit(Surv(data$`Acutal_survival_(month)`, data$delta_total) ~ 1, conf.type="log-log")
+summary(km_total)
+km
+```
+```{r}
+plot(km_total, xlab="Tiempo", ylab="sobrevivencia",
+     conf.int=TRUE, mark.time=FALSE)
+```
+
+```{r}
+na_total <- survfit(Surv(data$`Acutal_survival_(month)`, data$delta_total) ~ 1, conf.type="log-log", type="fh")
+summary(na_total)
+na_total
+```
+
+```{r}
+km_total_10years <- survfit(Surv(data$`10yr_survival_(months)`, data$delta_10years) ~ 1, conf.type="log-log", data = data)
+summary(km_total_10years)
+km_total_10years
+```
+
+```{r}
+ggsurvplot(km_total_10years,
+           data = data,
+           xlab = "Tiempo",
+           ylab = "Sobrevivencia",
+           conf.int = TRUE,        
+           risk.table = FALSE,      
+           censor = TRUE,         
+           palette = "deepskyblue4",    
+           ggtheme = theme_minimal())  
+
+
+```
+
+
+Ahora, si se divide por grupos de edades, puesto que se tiene pacientes con edades menores a 36, o entre 36 y 40, se obtienen los siguientes resultados.
+
+```{r}
+
 ```
 
