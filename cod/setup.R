@@ -12,7 +12,8 @@ pacman::p_load(
   xtable,
   survival,
   survminer,
-  tableone
+  tableone,
+  xfun
 )
 
 # R scripts
