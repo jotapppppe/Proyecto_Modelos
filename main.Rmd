@@ -54,23 +54,71 @@ km_total_10years
 ```
 
 ```{r}
-ggsurvplot(km_total_10years,
-           data = data,
-           xlab = "Tiempo",
-           ylab = "Sobrevivencia",
-           conf.int = TRUE,        
-           risk.table = FALSE,      
-           censor = TRUE,         
-           palette = "deepskyblue4",    
-           ggtheme = theme_minimal())  
+kmplot10years <- ggsurvplot(km_total_10years,
+                 data = data,
+                 xlab = "Tiempo (meses)",
+                 ylab = "Sobrevivencia",
+                 conf.int = TRUE,        
+                 risk.table = FALSE,      
+                 censor = TRUE,         
+                 palette = "deepskyblue4",    
+                 ggtheme = theme_minimal()
+                 )  
 
+ggsave("res/kmplot10years.pdf", plot = kmplot10years$plot, width = 8, height = 5)
 
+kmplot10years
 ```
 
 
 Ahora, si se divide por grupos de edades, puesto que se tiene pacientes con edades menores a 36, o entre 36 y 40, se obtienen los siguientes resultados.
 
-```{r}
+En primer lugar, se divide por el grado del cancer.
 
+
+```{r}
+km_gradodecancer <- survfit(Surv(`10yr_survival_(months)`, delta_10years) ~ Cancer_grade, conf.type="log-log", data = data)
+summary(km_gradodecancer)
 ```
 
+```{r}
+kmplot_gradodecancer <-ggsurvplot(km_gradodecancer,
+                       data = data,
+                       xlab = "Meses",
+                       ylab = "Probabilidad de supervivencia",
+                       conf.int = FALSE,
+                       legend.title = "Grado del cáncer",
+                       legend.labs = c("Grado 1", "Grado 2", "Grado 3"),
+                       palette = "Set1",
+                       ggtheme = theme_minimal()
+                       )
+
+kmplot_gradodecancer
+
+ggsave("res/kmplot_gradodecancer.pdf", plot = kmplot_gradodecancer$plot, width = 6, height = 5)
+```
+
+También se observa la supervivencia con base en el NPI.
+
+```{r}
+km_NPI <- survfit(Surv(`10yr_survival_(months)`, delta_10years) ~ NPI_group, conf.type="log-log", data = data)
+summary(km_NPI)
+```
+
+
+```{r}
+kmplot_NPI  <- ggsurvplot(km_NPI,
+                     data = data,
+                     xlab = "Meses",
+                     ylab = "Probabilidad de supervivencia",
+                     conf.int = FALSE,
+                     legend.title = "Grupo de NPI",
+                     legend.labs = c("Excelente", "Bueno", "Moderado 1", "Moderado 2", "Pobre"),
+                     palette = "Set1",
+                     ggtheme = theme_minimal()
+                     )
+
+kmplot_NPI
+
+ggsave("res/kmplot_NPI.pdf", plot = kmplot_NPI$plot, width = 6, height = 5)
+```     
