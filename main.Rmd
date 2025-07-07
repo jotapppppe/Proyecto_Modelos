@@ -353,18 +353,20 @@ datos$`Oestrogen_receptor_status` <- as.factor(datos$`Oestrogen_receptor_status`
 datos$`HER_2_status` <- as.factor(datos$`HER_2_status`)
 datos$`Cancer_histology` <- as.factor(datos$`Cancer_histology`) # no aporta, no se usa en el modelo
 datos$`Surgical_procedure` <- as.factor(datos$`Surgical_procedure`)
+datos$`NPI_group` <- as.factor(datos$`NPI_group`)
+datos$`Vascular_invasion` <- as.factor(datos$`Vascular_invasion`)
 datos <- subset(datos, `Surgical_procedure` != "Unknown") # no aporta y es solo una obs
 
 # Agrupamiento de variables que muestran problemas
-datos$`NPI_group` <- factor(datos$`NPI_group`,levels = c("excellent", "good", "moderate 1", "moderate 2", "poor"))
-datos$`Vascular_invasion` <- as.factor(datos$`Vascular_invasion`)
 datos$`Cancer_grade` <- factor(ifelse(datos$`Cancer_grade` %in% c("Grade 1", "Grade 2"), 
-                                     "Grade 1-2", "Grade 3")) # se agrupan pues hay pocas obs en 1 y 2
-datos$`NPI_group` <- factor(ifelse(datos$`NPI_group` %in% c("excellent", "good"), 
-                                  "good/excellent",
-                                  ifelse(datos$`NPI_group` %in% c("moderate 1", "moderate 2"),
-                                         "moderate",
-                                         "poor")))
+                                      "Grade 1-2", 
+                                      "Grade 3"),
+                               levels = c("Grade 1-2", "Grade 3"))
+datos$`NPI_group` <- factor(ifelse(datos$`NPI_group` %in% c("excellent", "good"), "good/excellent",
+                                   ifelse(datos$`NPI_group` %in% c("moderate 1", "moderate 2"), "moderate", 
+                                          "poor")),
+                            levels = c("good/excellent", "moderate", "poor")
+)
 datos$`Presenting_Symptom` <- factor(ifelse(datos$`Presenting_Symptom` == "lump", 
                                            "lump", 
                                            "other"))
@@ -372,34 +374,57 @@ datos$`Presenting_Symptom` <- factor(ifelse(datos$`Presenting_Symptom` == "lump"
 
 Modelo
 ```{r}
-modelo.cox <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ Age +
-                      `Presenting_Symptom` +
-                      `Cancer_Size` +
-                      `Number_of_lymph_nodes` + 
-                      `Cancer_grade` +
-                      `Oestrogen_receptor_status` +
-                      `HER_2_status` + 
-                      `Vascular_invasion` +
-                      `Surgical_procedure` +
+# ajuste preliminar
+modelo.cox.prelim <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ 
+                      # Participant # es un identificador
+                      Age +
+                      Presenting_Symptom +
+                      Cancer_Size +
+                      Number_of_lymph_nodes + 
+                      Cancer_grade +
+                      Oestrogen_receptor_status +
+                      HER_2_status + 
+                      # Cancer_histology + #no se considera pues solo son dos categorías: 
+                                           #Ductal y Other, y en Other no hay fallas.
+                      Vascular_invasion +
+                      Surgical_procedure +
+                      NPI +
+                      # NPI_group +
                       `NPI_10_yr_survival_(%)` +
-                      `Adjuvant_online_10yr_survival_(%)`, data = datos)
-cox.zph(modelo.cox)
+                      `Adjuvant_online_10yr_survival_(%)`,
+                      #Surival_date_(month-year) + # es la Fecha del ultimo seguimiento
+                      #Survival_stauts + # cuenta el estado de vida incluso después de los 10 años.
+                      #Acutal_survival_(month) + #cuenta el total de meses de vida incluyo despues de 10 años.
+                    data = datos)
+cox.zph(modelo.cox.prelim)
 ```
 
 Estratifica por surgical procedure
 ```{r}
-modelo.cox <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ Age +
-                      `Presenting_Symptom` +
-                      `Cancer_Size` +
-                      `Number_of_lymph_nodes` + 
-                      `Cancer_grade` +
-                      `Oestrogen_receptor_status` +
-                      `HER_2_status` + 
-                      `Vascular_invasion` +
-                      strata(`Surgical_procedure`) +
+
+modelo.cox.estrat <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ 
+                      # Participant # es un identificador
+                      Age +
+                      Presenting_Symptom +
+                      Cancer_Size +
+                      Number_of_lymph_nodes + 
+                      Cancer_grade +
+                      Oestrogen_receptor_status +
+                      HER_2_status + 
+                      # Cancer_histology + #no se considera pues solo son dos categorías: 
+                                           #Ductal y Other, y en Other no hay fallas.
+                      Vascular_invasion +
+                      strata(Surgical_procedure) +
+                      NPI +
+                      # NPI_group +
                       `NPI_10_yr_survival_(%)` +
-                      `Adjuvant_online_10yr_survival_(%)`, data = datos)
-cox.zph(modelo.cox)
+                      `Adjuvant_online_10yr_survival_(%)`,
+                      #Surival_date_(month-year) + # es la Fecha del ultimo seguimiento
+                      #Survival_stauts + # cuenta el estado de vida incluso después de los 10 años.
+                      #Acutal_survival_(month) + #cuenta el total de meses de vida incluyo despues de 10 años.
+                    data = datos)
+cox.zph(modelo.cox.estrat)
+modelo.cox.estrat
 ```
 
 Kaplan-Meier
@@ -427,3 +452,81 @@ plot_loglogCompl <- ggplot(df_km, aes(x = log_t, y = log_minus_log_S)) +
 ggsave(plot_loglogCompl, file='res/plot_loglogCompl.pdf')
 plot_loglogCompl
 ```
+
+# Evaluación de modelos
+```{r}
+summary(modelo.cox.prelim)
+```
+
+```{r}
+summary(modelo.cox.estrat)
+```
+
+```{r}
+AIC(modelo.cox.prelim, modelo.cox.estrat)
+# El BIC más pequeño indica el mejor modelo
+BIC(modelo.cox.prelim, modelo.cox.estrat)
+```
+```{r}
+anova(modelo.cox.prelim, modelo.cox.estrat)
+```
+
+Selección de modelo
+```{r}
+covariables <- c("Age", "Presenting_Symptom", "Cancer_Size", "Number_of_lymph_nodes",
+  "Cancer_grade", "Oestrogen_receptor_status", "HER_2_status",
+  "Vascular_invasion","strata(Surgical_procedure)", "NPI",
+  "`NPI_10_yr_survival_(%)`", "`Adjuvant_online_10yr_survival_(%)`")
+
+# Función para todas las combinaciones 
+todas_combinaciones <- map(1:length(covariables), function(k) {
+  combn(covariables, k, simplify = FALSE)
+}) %>%
+  flatten()  
+combinaciones_formula <- map_chr(todas_combinaciones, ~ paste(.x, collapse = " + "))
+```
+
+```{r}
+base_formula <- "Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`)"
+
+# Función para ajustar modelo de Cox
+ajustar_modelo <- function(varset) {
+  fmla_str <- paste(base_formula, "~", paste(varset, collapse = " + "))
+  fmla <- as.formula(fmla_str)
+  modelo <- coxph(fmla, data = datos)
+  return(modelo)
+}
+```
+
+```{r, warning=FALSE}
+modelos <- list()
+for (i in 1:length(combinaciones_formula)){
+  modelos[[i]] <- ajustar_modelo(combinaciones_formula[i])
+}
+```
+
+```{r}
+BICs <- c()
+AICs <- c()
+Concordances <- c()
+for (i in 1:4095) {
+  BICs[i] <- BIC(modelos[[i]])
+  AICs[i] <- AIC(modelos[[i]])
+  Concordances[i] <- summary(modelos[[i]])$concordance[1]
+}
+```
+
+```{r}
+mejor.modelo.AIC <- modelos[BICs==min(BICs)]
+mejor.modelo.BIC <-modelos[AICs==min(AICs)]
+mejor.modelo.Conc <-modelos[Concordances==max(Concordances)]
+
+mejor.modelo.AIC
+mejor.modelo.BIC
+mejor.modelo.Conc 
+```
+```{r}
+# modelo completo
+```
+
+
