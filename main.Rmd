@@ -19,11 +19,223 @@ output:
 ```{r include=FALSE}
 source("cod/setup.R")
 ```
-# EDA
-Observamos el summary de la base de datos.
 
+# Análisis Exploratorio de datos
+Observamos el summary de la base de datos.
 ```{r}
 summary(data)
+```
+
+## Distribuciones del NPI, NPI a 10 años y Adjuvant a 10 años.
+```{r}
+# Gráfico distribución NPI
+plot_distNPI <- ggplot(data, aes(x = NPI)) +
+    geom_histogram(fill = "steelblue", color = "black") +
+    labs(title = "Distribución de NPI", 
+         x = "NPI", 
+         y = "Frecuencia") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+# Gráfico distribución NPI 10 yr survival (%)
+plot_ditNPI10yr <- ggplot(data, aes(x = `NPI_10_yr_survival_(%)`)) +
+    geom_histogram(fill = "steelblue", color = "black") +
+    labs(title = "Distribución de NPI 10 yr survival (%)", 
+         x = "NPI 10 yr survival (%)", 
+         y = "Frecuencia") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+# Gráfico distribución Adjuvant online 10yr survival (%)
+plot_distAdjuvant <- ggplot(data, aes(x = `Adjuvant_online_10yr_survival_(%)`)) +
+    geom_histogram(fill = "steelblue", color = "black") +
+    labs(title = "Distribución de Adjuvant online 10yr survival (%)", 
+         x = "Adjuvant online 10yr survival (%)", 
+         y = "Frecuencia") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# guardar
+ggsave(plot_distNPI, file = 'res/plot_distNPI.pdf')
+ggsave(plot_ditNPI10yr, file = 'res/plot_ditNPI10yr.pdf')
+ggsave(plot_distAdjuvant, file = 'res/plot_distAdjuvant.pdf')
+plot_distNPI
+plot_ditNPI10yr
+plot_distAdjuvant
+```
+
+## Análisis Variables Cualitativas Ordinales.
+```{r}
+# Variable survivor 10 years
+data %>% 
+  group_by(`Survival_status_at_10yr_follow-up_(months)`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Age
+data %>% 
+  group_by(`Age`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Cancer Size
+data %>% 
+  group_by(`Cancer_Size`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Number of lymph nodes
+data %>% 
+  group_by(`Number_of_lymph_nodes`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Cancer grade
+data %>% 
+  group_by(`Cancer_grade`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable NPI group
+data %>% 
+  group_by(`NPI_group`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+```
+
+## Análisis Variables cualitativas nominales
+```{r}
+# Variable Presenting Symptom
+data %>% 
+  group_by(`Presenting_Symptom`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable HER 2 status
+data %>% 
+  group_by(`HER_2_status`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Cancer histology
+data %>% 
+  group_by(`Cancer_histology`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Surgical procedure
+data %>% 
+  group_by(`Surgical_procedure`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Oestrogen receptor status
+data %>% 
+  group_by(`Oestrogen_receptor_status`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Vascular invasion
+data %>% 
+  group_by(`Vascular_invasion`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+# Variable Survival stauts
+data %>% 
+  group_by(`Survival_stauts`) %>% 
+  summarise(n = n()) %>% 
+  mutate(Porcentaje = round(100 * n / sum(n), 2))
+```
+
+## Relación entre variables
+```{r}
+# Distribución de NPI según el estado de supervivencia a 10 años
+plot_NPIvsSurvival10yr <- ggplot(data, aes(x=`Survival_status_at_10yr_follow-up_(months)` , y = NPI)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Distribución del NPI según el estado de supervivencia a 10 años",
+       x = "Survival status at 10yr follow-up (months)",
+       y = "NPI") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave(plot_NPIvsSurvival10yr, file= 'res/plot_NPIvsSurvival10yr.pdf')
+plot_NPIvsSurvival10yr
+```
+
+## Variables categóricas
+```{r}
+# Tabla de contingencias
+table(data$`Cancer_grade`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`HER_2_status`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Vascular_invasion`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Surgical_procedure`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Presenting_Symptom`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`NPI_group`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Cancer_histology`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Cancer_histology`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Surgical_procedure`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Oestrogen_receptor_status`, data$`Survival_status_at_10yr_follow-up_(months)`)
+table(data$`Cancer_histology`, data$`Survival_status_at_10yr_follow-up_(months)`)
+```
+
+## Otros gráficos
+```{r}
+plot_NPIvsAdjuvan10yr <- ggplot(data, aes(x = NPI,
+                           y = `Adjuvant_online_10yr_survival_(%)`,
+                           color = `Survival_status_at_10yr_follow-up_(months)`)) +
+  geom_point(alpha = 0.7, size = 2.5) +
+  labs(title = "Relación entre NPI y Adjuvant! según estado de supervivencia",
+       x = "NPI",
+       y = "Adjuvant online 10yr survival (%)",
+       color = "Estado de supervivencia") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+plot_NPIvsSurvival10mth <- ggplot(data, aes(x = NPI,
+                           y = `10yr_survival_(months)`,
+                           color = `Survival_status_at_10yr_follow-up_(months)`)) +
+  geom_point(alpha = 0.7, size = 2.5) +
+  labs(title = "Relación entre NPI y 10yr survival (months)",
+       x = "NPI",
+       y = "10yr survival (months)",
+       color = "Estado de supervivencia") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+plot_Adj10yrvsSurvival10mth <- ggplot(data, aes(x = `Adjuvant_online_10yr_survival_(%)`,
+                           y = `10yr_survival_(months)`,
+                           color = `Survival_status_at_10yr_follow-up_(months)`)) +
+  geom_point(alpha = 0.7, size = 2.5) +
+  labs(title = "Relación entre Adjuvant online 10yr survival (%) y 10yr survival (months)",
+       x = "Adjuvant online 10yr survival (%)",
+       y = "10yr survival (months)",
+       color = "Estado de supervivencia") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+ggsave(plot_NPIvsAdjuvan10yr, file='res/plot_NPIvsAdjuvan10yr.pdf')
+ggsave(plot_NPIvsSurvival10mth, file= 'res/plot_NPIvsSurvival10mth.pdf')
+ggsave(plot_Adj10yrvsSurvival10mth, file= 'res/plot_Adj10yrvsSurvival10mth.pdf')
+plot_NPIvsAdjuvan10yr 
+plot_NPIvsSurvival10mth
+plot_Adj10yrvsSurvival10mth
+```
+
+## Correlaciones
+```{r}
+# Selección de variables
+variables <- data[, c("NPI", 
+                           "Adjuvant_online_10yr_survival_(%)", 
+                           "NPI_10_yr_survival_(%)",
+                           "Acutal_survival_(month)",
+                           "10yr_survival_(months)")]
+
+# Matriz de correlación
+matriz_cor <- cor(variables, use = "complete.obs")
+pdf("res/plot_MatrizCorr.pdf")
+plot_MatrizCorr <- corrplot(matriz_cor,
+         method = "shade", shade.col = NA,
+         tl.col = "black",
+         addCoef.col = "black", tl.srt = 45,
+         order = "AOE")
+dev.off()
+
+plot_MatrizCorr <- corrplot(matriz_cor,
+         method = "shade", shade.col = NA,
+         tl.col = "black",
+         addCoef.col = "black", tl.srt = 45,
+         order = "AOE")
+
 ```
 
 
@@ -34,7 +246,7 @@ Primero, se observa el análisis en caso de toda la muestra.
 ```{r}
 km_total <- survfit(Surv(data$`Acutal_survival_(month)`, data$delta_total) ~ 1, conf.type="log-log")
 summary(km_total)
-km
+km_total
 ```
 ```{r}
 plot(km_total, xlab="Tiempo", ylab="sobrevivencia",
@@ -122,3 +334,96 @@ kmplot_NPI
 
 ggsave("res/kmplot_NPI.pdf", plot = kmplot_NPI$plot, width = 6, height = 5)
 ```     
+
+## Justificación del uso de Cox
+```{r}
+# Trabajamos sobre una copia del data set
+datos <- data
+# Crear variable de status dummie
+datos$`Survival_status_at_10yr_follow-up_(months)` <- ifelse(datos$`Survival_status_at_10yr_follow-up_(months)` == "dead", 1, 0)
+# Convertir tiempo a numérico
+datos$`10yr_survival_(months)`<- as.numeric(datos$`10yr_survival_(months)`)
+# Convertir las covariables relevantes a factores
+datos$Age <- as.factor(datos$Age)
+datos$`Presenting_Symptom` <- as.factor(datos$`Presenting_Symptom`)
+datos$`Cancer_Size` <- factor(datos$`Cancer_Size`, levels = c("0.1-1.0", "1.1-2.0", "2.1-3.0", "3.1-5.0"))
+datos$`Number_of_lymph_nodes` <- factor(datos$`Number_of_lymph_nodes`,levels = c("0", "1-3", ">3"))
+datos$`Cancer_grade` <- as.factor(datos$`Cancer_grade`)
+datos$`Oestrogen_receptor_status` <- as.factor(datos$`Oestrogen_receptor_status`)
+datos$`HER_2_status` <- as.factor(datos$`HER_2_status`)
+datos$`Cancer_histology` <- as.factor(datos$`Cancer_histology`) # no aporta, no se usa en el modelo
+datos$`Surgical_procedure` <- as.factor(datos$`Surgical_procedure`)
+datos <- subset(datos, `Surgical_procedure` != "Unknown") # no aporta y es solo una obs
+
+# Agrupamiento de variables que muestran problemas
+datos$`NPI_group` <- factor(datos$`NPI_group`,levels = c("excellent", "good", "moderate 1", "moderate 2", "poor"))
+datos$`Vascular_invasion` <- as.factor(datos$`Vascular_invasion`)
+datos$`Cancer_grade` <- factor(ifelse(datos$`Cancer_grade` %in% c("Grade 1", "Grade 2"), 
+                                     "Grade 1-2", "Grade 3")) # se agrupan pues hay pocas obs en 1 y 2
+datos$`NPI_group` <- factor(ifelse(datos$`NPI_group` %in% c("excellent", "good"), 
+                                  "good/excellent",
+                                  ifelse(datos$`NPI_group` %in% c("moderate 1", "moderate 2"),
+                                         "moderate",
+                                         "poor")))
+datos$`Presenting_Symptom` <- factor(ifelse(datos$`Presenting_Symptom` == "lump", 
+                                           "lump", 
+                                           "other"))
+```
+
+Modelo
+```{r}
+modelo.cox <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ Age +
+                      `Presenting_Symptom` +
+                      `Cancer_Size` +
+                      `Number_of_lymph_nodes` + 
+                      `Cancer_grade` +
+                      `Oestrogen_receptor_status` +
+                      `HER_2_status` + 
+                      `Vascular_invasion` +
+                      `Surgical_procedure` +
+                      `NPI_10_yr_survival_(%)` +
+                      `Adjuvant_online_10yr_survival_(%)`, data = datos)
+cox.zph(modelo.cox)
+```
+
+Estratifica por surgical procedure
+```{r}
+modelo.cox <- coxph(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ Age +
+                      `Presenting_Symptom` +
+                      `Cancer_Size` +
+                      `Number_of_lymph_nodes` + 
+                      `Cancer_grade` +
+                      `Oestrogen_receptor_status` +
+                      `HER_2_status` + 
+                      `Vascular_invasion` +
+                      strata(`Surgical_procedure`) +
+                      `NPI_10_yr_survival_(%)` +
+                      `Adjuvant_online_10yr_survival_(%)`, data = datos)
+cox.zph(modelo.cox)
+```
+
+Kaplan-Meier
+```{r}
+km_fit <- survfit(Surv(`10yr_survival_(months)`, `Survival_status_at_10yr_follow-up_(months)`) ~ 1, data = datos)
+
+tiempos <- km_fit$time
+surv_probs <- km_fit$surv
+
+df_km <- data.frame(
+  log_t = log(tiempos),
+  log_minus_log_S = log(-log(surv_probs))
+)
+
+plot_loglogCompl <- ggplot(df_km, aes(x = log_t, y = log_minus_log_S)) +
+  geom_point(alpha = 0.7, size = 2.5, color = "darkblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "darkred", linetype = "dashed") +
+  labs(
+    x = "log(tiempo)",
+    y = "log(-log(S(t)))",
+    title = "Gráfico log-log complementario"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+ggsave(plot_loglogCompl, file='res/plot_loglogCompl.pdf')
+plot_loglogCompl
+```
