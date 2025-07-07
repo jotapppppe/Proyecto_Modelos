@@ -13,7 +13,9 @@ pacman::p_load(
   survival,
   survminer,
   tableone,
-  corrplot
+  corrplot,
+  glmulti,
+  purrr
 )
 
 # R scripts
